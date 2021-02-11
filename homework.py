@@ -15,29 +15,29 @@ logging.basicConfig(
     filemode='w'
 )
 
-PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-API = os.getenv('PRAKTIKUM_API')
+PRAKTIKUM_TOKEN = os.environ['PRAKTIKUM_TOKEN']
+TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
+CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
 
 
 def parse_homework_status(homework):
-    homework_name = homework.get('lesson_name')
-    reviewer_comment = homework.get('reviewer_comment')
+    homework_name = homework.get('homework_name')
     if homework.get('status') == 'rejected':
         verdict = 'К сожалению в работе нашлись ошибки.'
     else:
-        verdict = ('Ревьюеру всё понравилось, можно приступать'
-                   ' к следующему уроку.')
-    return (f'У вас проверили работу "{homework_name}"!\n\n{verdict}\n\n'
-            f'Комментарий: {reviewer_comment}')
+        verdict = (
+            'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
+        )
+    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homework_statuses(current_timestamp):
-    params = {'from_date': current_timestamp}
+    payload = {'from_date': current_timestamp}
     headers = {'Authorization': 'OAuth ' + PRAKTIKUM_TOKEN}
 
-    homework_statuses = requests.get(API, headers=headers, params=params)
+    homework_statuses = requests.get(
+        'https://praktikum.yandex.ru/api/user_api/homework_statuses/', 
+        headers=headers, params=payload)
     return homework_statuses.json()
 
 
