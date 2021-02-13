@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -21,23 +22,33 @@ CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
 
 def parse_homework_status(homework):
+    if 'status' not in homework and 'homework_name' not in homework:
+        raise KeyError('Ошибка - нет нужного ключа')
     homework_name = homework.get('homework_name')
-    if homework.get('status') == 'rejected':
-        verdict = 'К сожалению в работе нашлись ошибки.'
-    else:
-        verdict = (
-            'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
-        )
-    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+    current_status = homework.get('status')
+    status_valid = {
+        'rejected': 'К сожалению в работе нашлись ошибки.',
+        'approved': ('Ревьюеру всё понравилось, '
+                     'можно приступать к следующему уроку.'),
+        'reviewing': 'Ревьюер начал проверять вашу работу.'
+    }
+
+    for status, verdict in status_valid.items():
+        if status == current_status:
+            return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+    raise KeyError('Ошибка - невалидный статус')
 
 
 def get_homework_statuses(current_timestamp):
+    if current_timestamp is None:
+        current_timestamp = int(time.time())
     payload = {'from_date': current_timestamp}
     headers = {'Authorization': 'OAuth ' + PRAKTIKUM_TOKEN}
 
     homework_statuses = requests.get(
         'https://praktikum.yandex.ru/api/user_api/homework_statuses/',
         headers=headers, params=payload)
+
     return homework_statuses.json()
 
 
@@ -49,7 +60,7 @@ def send_message(message, bot_client):
 def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     logging.debug('Бот запущен')
-    current_timestamp = int(time.time())
+    current_timestamp = 0
 
     while True:
         try:
@@ -61,8 +72,12 @@ def main():
                                                  current_timestamp)
             time.sleep(300)
 
+        except json.JSONDecodeError:
+            logging.error('Запрос содержит невалидный JSON')
+            send_message('Запрос содержит невалидный JSON', bot)
+            time.sleep(5)
+
         except Exception as e:
-            print(f'Бот столкнулся с ошибкой: {e}')
             logging.error(f'Бот столкнулся с ошибкой: {e}')
             send_message(f'Бот столкнулся с ошибкой: {e}', bot)
             time.sleep(5)
