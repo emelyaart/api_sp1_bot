@@ -28,15 +28,15 @@ def parse_homework_status(homework):
     current_status = homework.get('status')
     status_valid = {
         'rejected': 'К сожалению в работе нашлись ошибки.',
-        'approved': ('Ревьюеру всё понравилось, '
-                     'можно приступать к следующему уроку.'),
+        'approved': 'Ревьюеру всё понравилось, '
+                    'можно приступать к следующему уроку.',
         'reviewing': 'Ревьюер начал проверять вашу работу.'
     }
+    verdict = status_valid.get(current_status)
 
-    for status, verdict in status_valid.items():
-        if status == current_status:
-            return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
-    raise KeyError('Ошибка - невалидный статус')
+    if verdict is None:
+        raise Exception('Ошибка - невалидный статус')
+    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homework_statuses(current_timestamp):
