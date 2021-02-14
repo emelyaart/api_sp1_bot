@@ -57,6 +57,12 @@ def send_message(message, bot_client):
     return bot_client.send_message(chat_id=CHAT_ID, text=message)
 
 
+def error(text, bot_client):
+    logging.error(f'Бот столкнулся с ошибкой: {text}')
+    send_message(f'Бот столкнулся с ошибкой: {text}', bot_client)
+    time.sleep(5)
+
+
 def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     logging.debug('Бот запущен')
@@ -72,15 +78,14 @@ def main():
                                                  current_timestamp)
             time.sleep(300)
 
+        except requests.exceptions.RequestException:
+            error('Сервис Яндекс.Практикум недоступен', bot)
+
         except json.JSONDecodeError:
-            logging.error('Запрос содержит невалидный JSON')
-            send_message('Запрос содержит невалидный JSON', bot)
-            time.sleep(5)
+            error('Запрос содержит невалидный JSON', bot)
 
         except Exception as e:
-            logging.error(f'Бот столкнулся с ошибкой: {e}')
-            send_message(f'Бот столкнулся с ошибкой: {e}', bot)
-            time.sleep(5)
+            error(e, bot)
 
 
 if __name__ == '__main__':
