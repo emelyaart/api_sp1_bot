@@ -36,7 +36,7 @@ def parse_homework_status(homework):
 
     if verdict is None:
         raise Exception('Ошибка - невалидный статус')
-    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+    return f'Статус работы: "{homework_name}"!\n\n{verdict}'
 
 
 def get_homework_statuses(current_timestamp):
